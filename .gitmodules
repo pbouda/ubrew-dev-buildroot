@@ -1,0 +1,3 @@
+[submodule "buildroot-qt-dev"]
+	path = buildroot-qt-dev
+	url = https://github.com/pbouda/buildroot-qt-dev.git
