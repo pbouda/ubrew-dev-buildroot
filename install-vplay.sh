@@ -4,9 +4,9 @@
 [ -z "$BUILDROOT_PATH" ] && BUILDROOT_PATH="buildroot-qt-dev/buildroot-2015.05"
 
 if [ ! -d "$VPLAY_SDK_PATH" ]; then
- echo "Could not find V-Play SDK. Make sure you installed the V-Play SDK and"
- echo "set the environment variable VPLAY_SDK_PATH."
- exit -1
+  echo "Could not find V-Play SDK. Make sure you installed the V-Play SDK and"
+  echo "set the environment variable VPLAY_SDK_PATH."
+  exit -1
 fi
 
 if [ ! -d "$BUILDROOT_PATH/output/host/usr/bin" ]; then
