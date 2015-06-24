@@ -10,6 +10,7 @@ cd buildroot-2015.05
 make defconfig BR2_DEFCONFIG=../config/buildroot-raspi2.conf
 
 echo "Installing gamepad patch to qtbase..."
+BUILDROOT_PATH="buildroot-qt-dev/buildroot-2015.05"
 install package/qt5/qt5base/0008-gamepad_device.patch $BUILDROOT_PATH/package/qt5/qt5base/
 
 echo "Starting build, this may take a while..."
