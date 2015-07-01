@@ -34,8 +34,6 @@ mkdir -p $BUILDROOT_PATH/output/V-Play
 install $VPLAY_SDK_PATH/V-Play/vplay_license.key \
 	$BUILDROOT_PATH/output/V-Play/
 
-echo "Downloading and installing libraries..."
-wget -O lib.tar.gz "https://owncloud.cidles.eu/public.php?service=files&t=6bf47f5c5eb5a0f453ec1c5dad7d760e&download"
-tar xzf lib.tar.gz
-install libVPlay.a $BUILDROOT_PATH/output/staging/usr/lib/
-install libVPlay_debug.a $BUILDROOT_PATH/output/staging/usr/lib/
+echo "Installing libraries..."
+install v-play/lib/libVPlay.a $BUILDROOT_PATH/output/staging/usr/lib/
+install v-play/lib/libVPlay_debug.a $BUILDROOT_PATH/output/staging/usr/lib/
