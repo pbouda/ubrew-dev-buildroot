@@ -1,0 +1,5 @@
+source "package/ubrew/libpnd/Config.in"
+source "package/ubrew/libpndman/Config.in"
+source "package/ubrew/qt5pndman/Config.in"
+source "package/ubrew/panorama/Config.in"
+source "package/ubrew/qt5gamepad/Config.in"

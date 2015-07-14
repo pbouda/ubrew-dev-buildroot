@@ -1,0 +1,7 @@
+config BR2_PACKAGE_LIBPNDMAN
+	bool "libpndman"
+	select BR2_PACKAGE_JANSSON
+	help
+	  Package management library for PND files.
+
+	  https://github.com/ubrew-it/libpndman

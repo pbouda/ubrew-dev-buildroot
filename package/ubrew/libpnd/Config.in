@@ -1,0 +1,6 @@
+config BR2_PACKAGE_LIBPND
+	bool "libpnd"
+	help
+	  Device specific libraries used on the Pandora platform. 
+
+	  https://github.com/ubrew-it/libpnd

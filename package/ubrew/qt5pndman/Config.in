@@ -1,0 +1,14 @@
+config BR2_PACKAGE_QT5PNDMAN
+	bool "qt5pndman"
+	depends on BR2_PACKAGE_QT5BASE
+	select BR2_PACKAGE_LIBPNDMAN
+	select BR2_PACKAGE_JANSSON
+	select BR2_PACKAGE_LIBCURL
+	select BR2_PACKAGE_BZIP2
+	help
+	  Qt is a cross-platform application and UI framework for
+	  developers using C++.
+
+	  This package corresponds to the qtpndman project for OpenPandora.
+
+	  http://qt.io

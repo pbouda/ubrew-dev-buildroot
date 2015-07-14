@@ -1,0 +1,7 @@
+config BR2_PACKAGE_PANORAMA
+	bool "panorama"
+	select qt5pndman
+	help
+	  A menu system, application launcher and user interface for the OpenPandora 
+
+	  https://github.com/ubrew-it/panorama
