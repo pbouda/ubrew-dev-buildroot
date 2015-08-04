@@ -35,5 +35,5 @@ install $VPLAY_SDK_PATH/V-Play/vplay_license.key \
 	$BUILDROOT_PATH/output/V-Play/
 
 echo "Installing libraries..."
-install v-play/lib/libVPlay.a $BUILDROOT_PATH/output/staging/usr/lib/
-install v-play/lib/libVPlay_debug.a $BUILDROOT_PATH/output/staging/usr/lib/
+install userland/staging/v-play/lib/libVPlay.a $BUILDROOT_PATH/output/staging/usr/lib/
+install userland/staging/v-play/lib/libVPlay_debug.a $BUILDROOT_PATH/output/staging/usr/lib/
