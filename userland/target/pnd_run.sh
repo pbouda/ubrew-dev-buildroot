@@ -157,103 +157,103 @@ list_using_fs() {
 }
 
 
-#=============================================================================
-# CPU speed functions
-PND_getCPUSpeed() {
-	cat /proc/pandora/cpu_mhz_max
-}
+# #=============================================================================
+# # CPU speed functions
+# PND_getCPUSpeed() {
+# 	cat /proc/pandora/cpu_mhz_max
+# }
 
-PND_setCPUSpeed() {
-	unset CURRENTSPEED
-	if ! [ -f "$CPUSPEED_FILE" ] && [ ! -z "$PND_CPUSPEED" ]; then
-		if [ ${PND_CPUSPEED} -gt $(PND_getCPUSpeed) ]; then 
-		   CURRENTSPEED=$(PND_getCPUSpeed)
-        	   case "$(zenity --title="set cpu speed" --height=350 --list --column "id" --column "Please select" --hide-column=1 \
-			   	  --text="$PND_NAME suggests to set the cpu speed to $PND_CPUSPEED MHz to make it run properly.\n\n Do you want to change the cpu speed? (current speed: $(PND_getCPUSpeed) MHz)\n\nWarning: Setting the clock speed above 600MHz can be unstable and it NOT recommended!" \
-				  "yes" "Yes, set it to $PND_CPUSPEED MHz" \
-				  "custom" "Yes, select custom value" \
-				  "yessave" "Yes, set it to $PND_CPUSPEED MHz and don't ask again" \
-				  "customsave" "Yes, set it to custom speed and don't ask again" \
-		   		  "no" "No, don't change the speed" \
-				  "nosave" "No, don't chage the speed and don't ask again")" in
-			"yes")
-				sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
-				;;
-	  	  	"custom")
-				sudo $CPUSPEEDSCRIPT
-				;;
-		  	"customsave")
-				sudo $CPUSPEEDSCRIPT
-				zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
-				PND_getCPUSpeed > $CPUSPEED_FILE
-				;;
-         	 	"yessave")
-				zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
-				sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
-				PND_getCPUSpeed > $CPUSPEED_FILE
-				;;
-                 	"nosave")
-				unset CURRENTSPEED
-				zenity --info --title="Note" --text="Speed will not be changed.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
-				echo 9999 > $CPUSPEED_FILE
-				;;
-			*)	unset CURRENTSPEED;;
- 	 	  esac
-	       fi
-	elif [ "$PND_CPUSPEED" -lt "1500" ]; then
-		CURRENTSPEED=$(PND_getCPUSpeed)
-		echo Setting to CPU-Speed $PND_CPUSPEED MHz
-		sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
-	fi
-}
+# PND_setCPUSpeed() {
+# 	unset CURRENTSPEED
+# 	if ! [ -f "$CPUSPEED_FILE" ] && [ ! -z "$PND_CPUSPEED" ]; then
+# 		if [ ${PND_CPUSPEED} -gt $(PND_getCPUSpeed) ]; then 
+# 		   CURRENTSPEED=$(PND_getCPUSpeed)
+#         	   case "$(zenity --title="set cpu speed" --height=350 --list --column "id" --column "Please select" --hide-column=1 \
+# 			   	  --text="$PND_NAME suggests to set the cpu speed to $PND_CPUSPEED MHz to make it run properly.\n\n Do you want to change the cpu speed? (current speed: $(PND_getCPUSpeed) MHz)\n\nWarning: Setting the clock speed above 600MHz can be unstable and it NOT recommended!" \
+# 				  "yes" "Yes, set it to $PND_CPUSPEED MHz" \
+# 				  "custom" "Yes, select custom value" \
+# 				  "yessave" "Yes, set it to $PND_CPUSPEED MHz and don't ask again" \
+# 				  "customsave" "Yes, set it to custom speed and don't ask again" \
+# 		   		  "no" "No, don't change the speed" \
+# 				  "nosave" "No, don't chage the speed and don't ask again")" in
+# 			"yes")
+# 				sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
+# 				;;
+# 	  	  	"custom")
+# 				sudo $CPUSPEEDSCRIPT
+# 				;;
+# 		  	"customsave")
+# 				sudo $CPUSPEEDSCRIPT
+# 				zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
+# 				PND_getCPUSpeed > $CPUSPEED_FILE
+# 				;;
+#          	 	"yessave")
+# 				zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
+# 				sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
+# 				PND_getCPUSpeed > $CPUSPEED_FILE
+# 				;;
+#                  	"nosave")
+# 				unset CURRENTSPEED
+# 				zenity --info --title="Note" --text="Speed will not be changed.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
+# 				echo 9999 > $CPUSPEED_FILE
+# 				;;
+# 			*)	unset CURRENTSPEED;;
+#  	 	  esac
+# 	       fi
+# 	elif [ "$PND_CPUSPEED" -lt "1500" ]; then
+# 		CURRENTSPEED=$(PND_getCPUSpeed)
+# 		echo Setting to CPU-Speed $PND_CPUSPEED MHz
+# 		sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
+# 	fi
+# }
 
-PND_resetCPUSpeed() {
-	if [ ! -z "$CURRENTSPEED" ]; then
-		sudo $CPUSPEEDSCRIPT $CURRENTSPEED
-	fi
-}
+# PND_resetCPUSpeed() {
+# 	if [ ! -z "$CURRENTSPEED" ]; then
+# 		sudo $CPUSPEEDSCRIPT $CURRENTSPEED
+# 	fi
+# }
 
-#=============================================================================
-# X management functions
+# #=============================================================================
+# # X management functions
 
-PND_CloseX(){
-	if [ $CLOSE_X ]; then #the app doesnt want x to run, so we kill it and restart it once the app quits
-		if [ ! $(pidof X) ]; then 
-			unset $CLOSE_X
-		else
-			applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
-			whitelist=$(cat ~/pndtest/whitelist) #adjust this to a fixed whitelist, maybe in the config dir
-			filteredlist=$(echo -e "$applist\n\n$whitelist\n\n$whitelist" | sort | uniq -u) #whitelist appended two times so those items are always removed
-			if [ ${#filteredlist} -ge 1 ]; then
-				message=$(echo -e "The following applications are still running, are you sure you want to close x? \n$filteredlist")
-				echo -e "?ae[34me[30m?"
-				xmessage -center "$message", -buttons yes,no
-				if [ $? = 102 ]; then
-					exit 1
-				fi
-				sudo /etc/init.d/slim-init stop
-				sleep 5s
-			else
-				echo -e "?ae[34me[30m?"
-				xmessage -center "killing x, nothing of value will be lost", -buttons ok,cancel
-				if [ $? = 102 ]; then
-					exit 1
-				fi
-				# close x now, do we want to use slim stop or just kill x?
-				sudo /etc/init.d/slim-init stop
-				sleep 5s
-			fi
-		fi
-	fi
-}
+# PND_CloseX(){
+# 	if [ $CLOSE_X ]; then #the app doesnt want x to run, so we kill it and restart it once the app quits
+# 		if [ ! $(pidof X) ]; then 
+# 			unset $CLOSE_X
+# 		else
+# 			applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
+# 			whitelist=$(cat ~/pndtest/whitelist) #adjust this to a fixed whitelist, maybe in the config dir
+# 			filteredlist=$(echo -e "$applist\n\n$whitelist\n\n$whitelist" | sort | uniq -u) #whitelist appended two times so those items are always removed
+# 			if [ ${#filteredlist} -ge 1 ]; then
+# 				message=$(echo -e "The following applications are still running, are you sure you want to close x? \n$filteredlist")
+# 				echo -e "?ae[34me[30m?"
+# 				xmessage -center "$message", -buttons yes,no
+# 				if [ $? = 102 ]; then
+# 					exit 1
+# 				fi
+# 				sudo /etc/init.d/slim-init stop
+# 				sleep 5s
+# 			else
+# 				echo -e "?ae[34me[30m?"
+# 				xmessage -center "killing x, nothing of value will be lost", -buttons ok,cancel
+# 				if [ $? = 102 ]; then
+# 					exit 1
+# 				fi
+# 				# close x now, do we want to use slim stop or just kill x?
+# 				sudo /etc/init.d/slim-init stop
+# 				sleep 5s
+# 			fi
+# 		fi
+# 	fi
+# }
 
-PND_RestartX(){
-	if [ $CLOSE_X ]; then #restart x if it was killed
-		# We need to wait a bit, doing it nicely ;)
-		sleep 5
-		sudo /etc/init.d/slim-init start
-	fi
-}
+# PND_RestartX(){
+# 	if [ $CLOSE_X ]; then #restart x if it was killed
+# 		# We need to wait a bit, doing it nicely ;)
+# 		sleep 5
+# 		sudo /etc/init.d/slim-init start
+# 	fi
+# }
 
 
 #=============================================================================
@@ -266,11 +266,11 @@ show_mounted_info(){
 	echo "Are mounted on :"
 	mount|grep loop
 	echo "For these Union :"
-	mount|grep aufs
+	mount|grep overlay
 }
 
 is_union_mounted() {
-	mount | grep -q "on $UNION_MOUNT_DIR/${PND_NAME} type aufs"
+	mount | grep -q "on $UNION_MOUNT_DIR/${PND_NAME} type overlay"
 }
 
 is_pnd_mounted() {
@@ -375,7 +375,7 @@ mountUnion() {
 	if [ $(id -u) -ne 0 ];then
 		sudo /usr/pandora/scripts/pnd_run.sh -m -p "$PND" -b "$PND_NAME"
 		if ! is_union_mounted;then
-			echo "ERROR: The Union File-system is not mounted !"
+			echo "ERROR: The Overlay File-system is not mounted !"
 			show_mounted_info
 			return 1
 		fi
@@ -408,13 +408,14 @@ mountUnion() {
 			mount -oremount,rw $MOUNTPOINT
 		fi
 
-		if [[ "$APPDD_FSTYPE" = "vfat" ]]; then # use noplink on fat, dont on other fs's 
-			#append is fucking dirty, need to clean that up
-			MOUNT_CMD="mount -t aufs -o exec,noplink,dirs=\"${APPDATADIR}=rw+nolwh\":\"$PND_MOUNT_DIR/$PND_NAME=rr$append\" none \"$UNION_MOUNT_DIR/$PND_NAME\""
-		else
-			MOUNT_CMD="mount -t aufs -o exec,dirs=\"${APPDATADIR}=rw+nolwh\":\"$PND_MOUNT_DIR/$PND_NAME=rr$append\" none \"$UNION_MOUNT_DIR/$PND_NAME\""
-		fi
-		echo "Mounting the Union FS : $MOUNT_CMD"
+		#if [[ "$APPDD_FSTYPE" = "vfat" ]]; then # use noplink on fat, dont on other fs's 
+		#	#append is fucking dirty, need to clean that up
+		#	MOUNT_CMD="mount -t aufs -o exec,noplink,dirs=\"${APPDATADIR}=rw+nolwh\":\"$PND_MOUNT_DIR/$PND_NAME=rr$append\" none \"$UNION_MOUNT_DIR/$PND_NAME\""
+		#else
+		#	MOUNT_CMD="mount -t aufs -o exec,dirs=\"${APPDATADIR}=rw+nolwh\":\"$PND_MOUNT_DIR/$PND_NAME=rr$append\" none \"$UNION_MOUNT_DIR/$PND_NAME\""
+		#fi
+		MOUNT_CMD="mount -t overlay overlay -o lowerdir=\"$PND_MOUNT_DIR/$PND_NAME\",upperdir=\"${APPDATADIR}\",workdir=\"/pandora/workdir\" \"$UNION_MOUNT_DIR/$PND_NAME\""
+		echo "Mounting the Overlay FS : $MOUNT_CMD"
 		eval $MOUNT_CMD
 
 		if ! is_union_mounted;then
@@ -423,7 +424,7 @@ mountUnion() {
 			sleep 1
 			eval $MOUNT_CMD
 			if ! is_union_mounted;then
-				echo "ERROR: The Union File-system is not mounted !"
+				echo "ERROR: The Overlay File-system is not mounted !"
 				show_mounted_info
 				return 1
 			fi
@@ -718,10 +719,10 @@ fi
 [ ! -z $APPDATASET ] || [ -z ${MOUNTPOINT} ] && APPDATADIR=${APPDATADIR:-$(dirname $PND)/$PND_NAME}
 APPDATADIR=${APPDATADIR:-${MOUNTPOINT}/pandora/appdata/${PND_NAME}}
 APPDD_FSTYPE=$(mount|awk '$3=="'${MOUNTPOINT}'"{print $5}')
-CPUSPEED_FILE=${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
-if [ -f "$CPUSPEED_FILE" ]; then
-	PND_CPUSPEED=$(cat "$CPUSPEED_FILE")
-fi
+#CPUSPEED_FILE=${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
+#if [ -f "$CPUSPEED_FILE" ]; then
+#	PND_CPUSPEED=$(cat "$CPUSPEED_FILE")
+#fi
 export APPDATADIR PND PND_NAME
 
 #Only logging when running
