@@ -9,13 +9,26 @@ if [ ! -d "$BUILDROOT_PATH/output/host/usr/bin" ]; then
 fi
 
 echo "Installing package files..."
-mkdir -p $BUILDROOT_PATH/package/qt5/qt5gamepad
-install package/qt5/qt5gamepad/Config.in $BUILDROOT_PATH/package/qt5/qt5gamepad/
-install package/qt5/qt5gamepad/qt5gamepad.mk \
-	$BUILDROOT_PATH/package/qt5/qt5gamepad/
+mkdir -p $BUILDROOT_PATH/package/ubrew
+cp -r package/ubrew/* $BUILDROOT_PATH/package/ubrew/
 
+# Save current path
 current_dir=$(pwd)
-echo "Building qt5gamepad..."
 cd $BUILDROOT_PATH
+
+echo "Building qt5gamepad..."
 make qt5gamepad
+
+echo "Building libpnd..."
+make libpnd
+
+echo "Building libpndman..."
+make libpndman
+
+echo "Building qt5pndman..."
+make qt5pndman
+
+echo "Building panorama..."
+make panorama
+
 cd $current_dir

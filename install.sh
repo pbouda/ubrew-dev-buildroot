@@ -14,5 +14,5 @@ if [ ! -f buildroot-qt-dev/README.md ]; then
 fi
 
 ./install-buildroot.sh
-./install-qt5gamepad.sh
+./install-packages.sh
 ./install-vplay.sh
