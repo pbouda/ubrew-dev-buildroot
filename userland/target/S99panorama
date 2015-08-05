@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+HOME=/root
+DESC="Panorama menu and app launcher"
+NAME=panorama
+APP=/usr/bin/$NAME
+OPTION=""
+
+# Gracefully exit if the package has been removed.
+test -x $APP || exit 0
+
+echo $1 >>/tmp/output
+case "$1" in
+  start)
+	echo "Starting $DESC: $NAME"
+	start-stop-daemon -S -b -x $APP -- $OPTION
+	echo "."
+	;;
+  stop) echo -n "Stopping $DESC: $NAME"
+	start-stop-daemon -K -q -n $NAME
+	echo "."
+	;;
+ #  reload|force-reload) echo -n "Reloading $DESC configuration..."
+	# start-stop-daemon -K -q -n $NAME -s 1
+	# echo "done."
+ #  ;;
+  restart) echo "Restarting $DESC: $NAME"
+	$0 stop
+	sleep 1
+	$0 start
+	;;
+  *) echo "Usage: $SCRIPTNAME {start|stop|restart}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
