@@ -1,9 +1,4 @@
-#!/bin/sh
- 
-#/etc/sudoers needs to be adjusted if you touch any of the sudo lines
- 
-# look at the comments in the CLOSE_X part, adjust 
-#use "lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq > whitelist" with nothing running to generate the whitelist
+#!/bin/bash
  
 #todo - no proper order
 #validate params better
@@ -17,7 +12,6 @@
 
 PND_MOUNT_DIR="/mnt/pnd"
 UNION_MOUNT_DIR="/mnt/utmp"
-CPUSPEEDSCRIPT=/usr/pandora/scripts/op_cpuspeed.sh
 
 #=============================================================================
 # Log functions
@@ -135,15 +129,14 @@ PND_Exec() {
 showHelp() {
 	cat <<endHELP
 Usage:
-  pnd_run.sh -p file.pnd -e cmd [-a args] [-b pndid] [-s path] [-c speed] [-d [path]] [-x] [-m] [-u] [-- more_args]
+  pnd_run.sh -p file.pnd -e cmd [-a args] [-b pndid] [-s path] [-d [path]] [-x] [-m] [-u] [-- more_args]
     -p file.pnd	: Specify the pnd file to execute
     -e cmd	: Command to run
     -a args	: Arguments to the command
     -b pndid	: name of the directory mount-point ($UNION_MOUNT_DIR/pndid) (Default: name of the pnd file)
     -s path	: Directory in the union to start the command from
-    -o speed	: Set the CPU speed
     -d [path]	: Use path as source of the overlay. (Default: pandora/appdata/pndid)
-    -x		: Stop X before starting the apps
+    -x		: Stop Panorama before starting the apps
     -m		: Only mount the pnd, dont run it (-e become optional)
     -u		: Only umount the pnd, dont run it (-e become optional)
 
@@ -156,104 +149,17 @@ list_using_fs() {
 	for p in $(fuser -m $1 2>/dev/null);do ps hf $p;done
 }
 
+#=============================================================================
+# Panorama management functions
 
-# #=============================================================================
-# # CPU speed functions
-# PND_getCPUSpeed() {
-# 	cat /proc/pandora/cpu_mhz_max
-# }
+PND_ClosePanorama(){
+	echo "Stopping panorama"
+	/etc/init.d/S99panorama stop
+}
 
-# PND_setCPUSpeed() {
-# 	unset CURRENTSPEED
-# 	if ! [ -f "$CPUSPEED_FILE" ] && [ ! -z "$PND_CPUSPEED" ]; then
-# 		if [ ${PND_CPUSPEED} -gt $(PND_getCPUSpeed) ]; then 
-# 		   CURRENTSPEED=$(PND_getCPUSpeed)
-#         	   case "$(zenity --title="set cpu speed" --height=350 --list --column "id" --column "Please select" --hide-column=1 \
-# 			   	  --text="$PND_NAME suggests to set the cpu speed to $PND_CPUSPEED MHz to make it run properly.\n\n Do you want to change the cpu speed? (current speed: $(PND_getCPUSpeed) MHz)\n\nWarning: Setting the clock speed above 600MHz can be unstable and it NOT recommended!" \
-# 				  "yes" "Yes, set it to $PND_CPUSPEED MHz" \
-# 				  "custom" "Yes, select custom value" \
-# 				  "yessave" "Yes, set it to $PND_CPUSPEED MHz and don't ask again" \
-# 				  "customsave" "Yes, set it to custom speed and don't ask again" \
-# 		   		  "no" "No, don't change the speed" \
-# 				  "nosave" "No, don't chage the speed and don't ask again")" in
-# 			"yes")
-# 				sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
-# 				;;
-# 	  	  	"custom")
-# 				sudo $CPUSPEEDSCRIPT
-# 				;;
-# 		  	"customsave")
-# 				sudo $CPUSPEEDSCRIPT
-# 				zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
-# 				PND_getCPUSpeed > $CPUSPEED_FILE
-# 				;;
-#          	 	"yessave")
-# 				zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
-# 				sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
-# 				PND_getCPUSpeed > $CPUSPEED_FILE
-# 				;;
-#                  	"nosave")
-# 				unset CURRENTSPEED
-# 				zenity --info --title="Note" --text="Speed will not be changed.\n\nTo re-enable this dialogue, please delete the file\n$CPUSPEED_FILE"
-# 				echo 9999 > $CPUSPEED_FILE
-# 				;;
-# 			*)	unset CURRENTSPEED;;
-#  	 	  esac
-# 	       fi
-# 	elif [ "$PND_CPUSPEED" -lt "1500" ]; then
-# 		CURRENTSPEED=$(PND_getCPUSpeed)
-# 		echo Setting to CPU-Speed $PND_CPUSPEED MHz
-# 		sudo $CPUSPEEDSCRIPT $PND_CPUSPEED
-# 	fi
-# }
-
-# PND_resetCPUSpeed() {
-# 	if [ ! -z "$CURRENTSPEED" ]; then
-# 		sudo $CPUSPEEDSCRIPT $CURRENTSPEED
-# 	fi
-# }
-
-# #=============================================================================
-# # X management functions
-
-# PND_CloseX(){
-# 	if [ $CLOSE_X ]; then #the app doesnt want x to run, so we kill it and restart it once the app quits
-# 		if [ ! $(pidof X) ]; then 
-# 			unset $CLOSE_X
-# 		else
-# 			applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
-# 			whitelist=$(cat ~/pndtest/whitelist) #adjust this to a fixed whitelist, maybe in the config dir
-# 			filteredlist=$(echo -e "$applist\n\n$whitelist\n\n$whitelist" | sort | uniq -u) #whitelist appended two times so those items are always removed
-# 			if [ ${#filteredlist} -ge 1 ]; then
-# 				message=$(echo -e "The following applications are still running, are you sure you want to close x? \n$filteredlist")
-# 				echo -e "?ae[34me[30m?"
-# 				xmessage -center "$message", -buttons yes,no
-# 				if [ $? = 102 ]; then
-# 					exit 1
-# 				fi
-# 				sudo /etc/init.d/slim-init stop
-# 				sleep 5s
-# 			else
-# 				echo -e "?ae[34me[30m?"
-# 				xmessage -center "killing x, nothing of value will be lost", -buttons ok,cancel
-# 				if [ $? = 102 ]; then
-# 					exit 1
-# 				fi
-# 				# close x now, do we want to use slim stop or just kill x?
-# 				sudo /etc/init.d/slim-init stop
-# 				sleep 5s
-# 			fi
-# 		fi
-# 	fi
-# }
-
-# PND_RestartX(){
-# 	if [ $CLOSE_X ]; then #restart x if it was killed
-# 		# We need to wait a bit, doing it nicely ;)
-# 		sleep 5
-# 		sudo /etc/init.d/slim-init start
-# 	fi
-# }
+PND_RestartPanorama(){
+	/etc/init.d/S99panorama start
+}
 
 
 #=============================================================================
@@ -553,12 +459,12 @@ runApp() {
 	fi
 	RC=$?
 
-	#the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
-	PID=$(pidof -o %PPID -x \"$EXENAME\")	# get pid of app
-	while [ "$PID" ];do			# wait till we get no pid back for tha app, again a bit ugly, but it works
-		sleep 10s
-		PID=`pidof -o %PPID -x \"$EXENAME\"`
-	done
+	# #the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
+	# PID=$(pidof -o %PPID -x \"$EXENAME\")	# get pid of app
+	# while [ "$PID" ];do			# wait till we get no pid back for tha app, again a bit ugly, but it works
+	# 	sleep 10s
+	# 	PID=`pidof -o %PPID -x \"$EXENAME\"`
+	# done
 	export HOME="$REAL_HOME"
 	return $RC
 }
@@ -576,22 +482,17 @@ main() {
 		PND_BeginTask "Mount the PND"
 		mountUnion
 		PND_EndTask
-		if [ $? -ne 0 ];then
-			zenity --warning --title="Mounting the PND failed" --text="Mounting the PND failed. The application wont start. Please have a look at $PND_LOG"
-			return 3
-		fi
-		if [ -e /proc/pandora/cpu_mhz_max ] && [ ! -z "$PND_CPUSPEED" ];then
-			PND_BeginTask "Set CPU speed"
-			PND_setCPUSpeed
-			PND_EndTask
-		fi
-		if [ $CLOSE_X ]; then
-			PND_BeginTask "Closing X"
-			PND_CloseX
-			PND_EndTask
-		fi
+		# if [ $? -ne 0 ];then
+		# 	zenity --warning --title="Mounting the PND failed" --text="Mounting the PND failed. The application wont start. Please have a look at $PND_LOG"
+		# 	return 3
+		# fi
+		# if [ $CLOSE_PANORAMA ]; then
+		# 	PND_BeginTask "Closing Panorama"
+		# 	PND_ClosePanorama
+		# 	PND_EndTask
+		# fi
 		oPWD=$(pwd)
-		old_fb0_geometry=$(fbset -fb /dev/fb0 -s | grep geometry | awk '{print $2, $3, $4, $5, $6}')
+		#old_fb0_geometry=$(fbset -fb /dev/fb0 -s | grep geometry | awk '{print $2, $3, $4, $5, $6}')
 		if [ -e "${APPDATADIR}/PND_pre_script.sh" ]; then
 			PND_BeginTask "Starting user configured pre-script"
 			. ${APPDATADIR}/PND_pre_script.sh # Sourcing so it can shared vars with post-script ;)
@@ -608,24 +509,24 @@ main() {
 			PND_EndTask
 		fi
 		cd $oPWD
-		if [ $CLOSE_X ]; then
-			PND_BeginTask "Restarting X"
-			PND_RestartX
+		if [ $CLOSE_PANORAMA ]; then
+			PND_BeginTask "Restarting Panorama"
+			PND_RestartPanorama
 			PND_EndTask
 		fi
-		if [ ! -z "$CURRENTSPEED" ]; then
-			PND_BeginTask "Reset CPU speed to $CURRENTSPEED"
-			PND_resetCPUSpeed
-			PND_EndTask
-		fi
-		PND_BeginTask "Restoring the frame buffer status"
-		fbset -fb /dev/fb0 -g $old_fb0_geometry
-		old_res=$(echo $old_fb0_geometry | awk '{print $1, $2}')
-		ofbset -fb /dev/fb0 -pos 0 0 -size $old_res -en 1
-		if ! lsof /dev/fb1 > /dev/null; then
-			ofbset -fb /dev/fb1 -mem 0 -size 0 0 -en 0
-		fi
-		PND_EndTask
+		# if [ ! -z "$CURRENTSPEED" ]; then
+		# 	PND_BeginTask "Reset CPU speed to $CURRENTSPEED"
+		# 	PND_resetCPUSpeed
+		# 	PND_EndTask
+		# fi
+		# PND_BeginTask "Restoring the frame buffer status"
+		# fbset -fb /dev/fb0 -g $old_fb0_geometry
+		# old_res=$(echo $old_fb0_geometry | awk '{print $1, $2}')
+		# ofbset -fb /dev/fb0 -pos 0 0 -size $old_res -en 1
+		# if ! lsof /dev/fb1 > /dev/null; then
+		# 	ofbset -fb /dev/fb1 -mem 0 -size 0 0 -en 0
+		# fi
+		# PND_EndTask
 		PND_BeginTask "uMount the PND"
 		umountUnion
 		PND_EndTask
@@ -636,6 +537,12 @@ main() {
 ######################################################################################
 ####	Parsing the arguments :
 ##
+
+if [ $PPID -ne 1 ]; then
+	nohup /usr/bin/pnd_run.sh "$@" &
+	exit 0
+fi
+
 if [ "$#" -lt 1 ]; then
 	showHelp
 	exit 1
@@ -655,7 +562,6 @@ while [ "$#" -gt 0 ];do
                 -b) PND_NAME="$2";;
                 -s) STARTDIR="$2";;
                 -j) append="$2";;
-                -c) PND_CPUSPEED="$2";;
                 -d) APPDATASET=1;APPDATADIR="$2";;
                 -a) ARGUMENTS="$2";;
                 *)	echo "ERROR while parsing arguments: \"$1 $2\" is not a valid argument"; 
@@ -667,7 +573,7 @@ while [ "$#" -gt 0 ];do
         	case "$1" in
                 -m) ACTION=mount;;
                 -u) ACTION=umount;;
-                -x) CLOSE_X=1;;
+                -x) CLOSE_PANORAMA=1;;
                 -d) APPDATASET=1;;
                 *)	echo "ERROR while parsing arguments: \"$1\" is not a valid argument"; 
 			showHelp;
@@ -729,12 +635,7 @@ export APPDATADIR PND PND_NAME
 if [[ "$ACTION" == "run" ]];then
 	PND_Start
 	{
-	if [ $CLOSE_X ]; then
-		main "$@" 2>&1 & 
-		disown
-	else
 		main "$@" 2>&1
-	fi
 	}>>"$PND_LOG"
 	PND_Stop
 else
